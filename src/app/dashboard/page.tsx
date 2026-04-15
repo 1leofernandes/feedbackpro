@@ -17,7 +17,12 @@ import {
   Meh,
   Frown,
   Laugh,
+  Copy,
+  Link2,
+  Plus,
+  Check,
 } from 'lucide-react';
+import { toast, Toaster } from 'sonner';
 
 interface EstablishmentData {
   sector: string;
@@ -30,27 +35,34 @@ interface EstablishmentData {
   very_dissatisfied: number;
 }
 
+// Defina o domínio base da aplicação (pode vir de env)
+const BASE_DOMAIN = 'https://feedbackpro-ltga.vercel.app';
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [establishments, setEstablishments] = useState<EstablishmentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [overallAverage, setOverallAverage] = useState(0);
+  const [newSector, setNewSector] = useState('');
+  const [copiedBase, setCopiedBase] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedSector, setCopiedSector] = useState<string | null>(null);
+
+  const enterprise = session?.user?.enterprise || '';
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       redirect('/login');
     }
 
-    if (status === 'authenticated' && session?.user?.enterprise) {
+    if (status === 'authenticated' && enterprise) {
       fetchEstablishments();
     }
-  }, [session, status]);
+  }, [session, status, enterprise]);
 
   const fetchEstablishments = async () => {
     try {
-      const response = await fetch(
-        `/api/establishments/${session?.user?.enterprise}`
-      );
+      const response = await fetch(`/api/establishments/${enterprise}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -87,6 +99,60 @@ export default function DashboardPage() {
     return 'from-red-500 to-pink-500';
   };
 
+  const handleCopyBaseUrl = async () => {
+    const baseUrl = `${BASE_DOMAIN}/${enterprise}/`;
+    try {
+      await navigator.clipboard.writeText(baseUrl);
+      setCopiedBase(true);
+      toast.success('URL base copiada!', {
+        description: baseUrl,
+        duration: 3000,
+      });
+      setTimeout(() => setCopiedBase(false), 2000);
+    } catch (err) {
+      toast.error('Erro ao copiar URL');
+    }
+  };
+
+  const handleGenerateSectorLink = async () => {
+    if (!newSector.trim()) {
+      toast.warning('Digite um nome para o setor');
+      return;
+    }
+    const sectorSlug = newSector.trim().toLowerCase().replace(/\s+/g, '-');
+    const fullUrl = `${BASE_DOMAIN}/${enterprise}/${sectorSlug}`;
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      setCopiedLink(true);
+      toast.success('Link do setor copiado!', {
+        description: fullUrl,
+        duration: 4000,
+      });
+      setNewSector('');
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      toast.error('Erro ao copiar link');
+    }
+  };
+
+  const handleCopySectorUrl = async (sector: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const sectorUrl = `${BASE_DOMAIN}/${enterprise}/${sector}`;
+    try {
+      await navigator.clipboard.writeText(sectorUrl);
+      setCopiedSector(sector);
+      toast.success('Link do local copiado!', {
+        description: sectorUrl,
+        duration: 3000,
+      });
+      setTimeout(() => setCopiedSector(null), 2000);
+    } catch (err) {
+      toast.error('Erro ao copiar link');
+    }
+  };
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
@@ -100,6 +166,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
+      <Toaster position="top-center" richColors theme="dark" />
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
@@ -113,7 +180,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12"
+          className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8"
         >
           <div className="space-y-3">
             <motion.div
@@ -152,6 +219,82 @@ export default function DashboardPage() {
           </motion.button>
         </motion.div>
 
+        {/* 🔗 Quick Link Tools */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
+        >
+          {/* Base URL Card */}
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-cyan-500/30 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
+                <Link2 className="w-5 h-5 text-cyan-400" />
+              </div>
+              <h3 className="text-white font-semibold text-sm sm:text-base">URL Base</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-slate-300 text-xs sm:text-sm font-mono break-all">
+                {BASE_DOMAIN}/{enterprise}/
+              </code>
+              <motion.button
+                onClick={handleCopyBaseUrl}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-cyan-300 transition-colors flex-shrink-0"
+                title="Copiar URL base"
+              >
+                {copiedBase ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              </motion.button>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+              Use esta URL base para criar links de setores adicionando o nome ao final.
+            </p>
+          </div>
+
+          {/* Create Sector Link Card */}
+          <div className="p-5 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl hover:border-cyan-500/30 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                <Plus className="w-5 h-5 text-emerald-400" />
+              </div>
+              <h3 className="text-white font-semibold text-sm sm:text-base">
+                Criar Link de Novo Local
+              </h3>
+            </div>
+
+            <div className="flex flex-wrap items-stretch gap-2">
+              <div className="flex-1 min-w-[200px] flex items-stretch bg-black/30 border border-white/10 rounded-lg overflow-hidden">
+                <span className="xs:inline-flex items-center px-3 py-2 text-slate-400 text-xs sm:text-sm font-mono bg-black/20 border-r border-white/10 whitespace-nowrap">
+                  …/{enterprise}/
+                </span>
+                <input
+                  type="text"
+                  value={newSector}
+                  onChange={(e) => setNewSector(e.target.value)}
+                  placeholder="nomedolocal"
+                  className="w-full bg-transparent px-3 py-2 text-white placeholder:text-slate-500 text-sm font-mono outline-none"
+                />
+              </div>
+
+              <motion.button
+                onClick={handleGenerateSectorLink}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all whitespace-nowrap"
+              >
+                {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span className="text-sm">Copiar Link</span>
+              </motion.button>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-2">
+              Digite o nome do setor e clique para copiar o link completo.
+            </p>
+          </div>
+        </motion.div>
+
         {/* Overall Satisfaction Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -161,11 +304,9 @@ export default function DashboardPage() {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl blur-2xl"></div>
           <div className="relative backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 overflow-hidden group hover:border-cyan-500/50 transition-all duration-300">
-            {/* Glow effect on hover */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
             <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              {/* Left side - Icon and Main Stats */}
               <div className="flex items-start gap-6 lg:gap-8">
                 <motion.div
                   animate={{ scale: [1, 1.05, 1] }}
@@ -237,7 +378,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Right side - Progress Bar */}
               <div className="lg:text-right space-y-4 flex-1">
                 <p className="text-slate-400 text-sm font-medium">
                   em {establishments.length} estabelecimento{establishments.length !== 1 ? 's' : ''}
@@ -289,7 +429,7 @@ export default function DashboardPage() {
               transition={{ delay: 0.4 }}
               className="text-slate-400 text-sm font-medium"
             >
-              {establishments.length} local{establishments.length !== 1 ? 'is' : ''}
+              {establishments.length} loca{establishments.length !== 1 ? 'is' : 'l'}
             </motion.div>
           </div>
 
@@ -316,18 +456,32 @@ export default function DashboardPage() {
                     className="group relative"
                   >
                     <Link href={`/dashboard/establishment/${est.sector}`}>
-                      {/* Gradient glow on hover */}
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                       <div className="relative h-full backdrop-blur-xl bg-white/5 border border-white/10 group-hover:border-cyan-500/50 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col">
-                        {/* Header */}
+                        {/* Header com botão de cópia integrado */}
                         <div className="px-6 py-5 border-b border-white/10 group-hover:border-cyan-500/30 transition-colors">
-                          <div className="flex justify-between items-start gap-3 mb-3">
-                            <div>
-                              <h3 className="text-lg md:text-xl font-bold text-white capitalize mb-2">
-                                {est.sector}
-                              </h3>
-                              <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-lg md:text-xl font-bold text-white capitalize truncate">
+                                  {est.sector}
+                                </h3>
+                                <motion.button
+                                  onClick={(e) => handleCopySectorUrl(est.sector, e)}
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 transition-all flex-shrink-0"
+                                  title="Copiar URL do local"
+                                >
+                                  {copiedSector === est.sector ? (
+                                    <Check className="w-4 h-4 text-emerald-400" />
+                                  ) : (
+                                    <Copy className="w-4 h-4" />
+                                  )}
+                                </motion.button>
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap mt-2">
                                 <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-md border border-white/10">
                                   <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                                   <span className={`text-base font-bold ${getSatisfactionColor(est.average_satisfaction)}`}>
@@ -354,9 +508,8 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        {/* Content */}
+                        {/* Content (inalterado) */}
                         <div className="px-6 py-5 space-y-5 flex-1">
-                          {/* Satisfaction Bar */}
                           <div className="space-y-2">
                             <div className="flex justify-between text-xs">
                               <span className="text-slate-400 font-medium">Índice de satisfação</span>
@@ -379,7 +532,6 @@ export default function DashboardPage() {
                             </motion.div>
                           </div>
 
-                          {/* Distribution */}
                           <div className="space-y-2">
                             <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Distribuição</p>
                             <div className="grid grid-cols-5 gap-1">
@@ -405,7 +557,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer (inalterado) */}
                         <div className="px-6 py-3 border-t border-white/10 group-hover:border-cyan-500/30 transition-colors bg-white/2 flex items-center justify-between">
                           <span className="text-xs text-slate-400 font-medium">Ver análises detalhadas</span>
                           <motion.div
