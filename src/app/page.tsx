@@ -168,7 +168,7 @@ export default function Home() {
                     type="text"
                     value={routeInput}
                     onChange={(e) => setRouteInput(e.target.value)}
-                    placeholder="leoenterprise/loja1"
+                    placeholder="enterprise/loja1"
                     className="w-full bg-transparent px-4 py-2.5 text-white placeholder:text-slate-600 text-sm outline-none font-mono"
                     disabled={isNavigating}
                   />
