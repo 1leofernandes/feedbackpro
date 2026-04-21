@@ -169,7 +169,7 @@ export default function FeedbackComponent({ enterprise, sector }: FeedbackFormPr
 
       <button
         onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-20 p-2 hover:bg-slate-700/70 backdrop-blur-sm rounded-lg border-none text-slate-600 transition-colors"
+        className="absolute top-4 right-4 z-20 p-2 hover:bg-slate-700/70 backdrop-blur-sm rounded-lg border-none text-slate-800 transition-colors"
         aria-label={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
       >
         {isFullscreen ? (
