@@ -49,8 +49,8 @@ export default function Home() {
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Sparkles className="w-8 h-8 text-cyan-400" />
-              <span className="text-cyan-400 font-semibold text-sm uppercase tracking-wider">Bem-vindo ao</span>
+              
+              <span className="mt-4 text-cyan-400 font-semibold text-sm uppercase tracking-wider">Bem-vindo ao</span>
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 bg-gradient-to-r from-blue-400 via-cyan-300 to-teal-400 bg-clip-text text-transparent leading-tight">

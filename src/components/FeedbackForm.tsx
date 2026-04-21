@@ -131,7 +131,7 @@ export default function FeedbackComponent({ enterprise, sector }: FeedbackFormPr
         setTimeout(() => {
           setSelectedLevel(null);
           setSubmitted(false);
-        }, 4000);
+        }, 2300);
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);
@@ -145,9 +145,44 @@ export default function FeedbackComponent({ enterprise, sector }: FeedbackFormPr
     setSubmitted(false);
   };
 
+  // botão para tela cheia (estilo quiosquw)
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.error('Fullscreen error:', err);
+    }
+  };
+
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden flex flex-col items-center justify-center p-4 md:p-6">
       {/* Animated background */}
+
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 z-20 p-2 hover:bg-slate-700/70 backdrop-blur-sm rounded-lg border-none text-slate-600 transition-colors"
+        aria-label={isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+      >
+        {isFullscreen ? (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        )}
+      </button>
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-violet-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
@@ -261,7 +296,7 @@ export default function FeedbackComponent({ enterprise, sector }: FeedbackFormPr
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.2 }}
               className="text-center py-8"
             >
               <motion.div
@@ -308,7 +343,7 @@ export default function FeedbackComponent({ enterprise, sector }: FeedbackFormPr
                   transition={{ delay: 0.4 }}
                   className="flex justify-center"
                 >
-                  <motion.button
+                  {/* <motion.button
                     onClick={handleReset}
                     className="px-6 py-3 bg-white/10 border border-white/20 hover:border-cyan-400/50 hover:bg-white/20 text-white font-semibold rounded-xl transition-all flex items-center gap-2"
                     whileHover={{ scale: 1.05 }}
@@ -318,7 +353,7 @@ export default function FeedbackComponent({ enterprise, sector }: FeedbackFormPr
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     Avaliar novamente
-                  </motion.button>
+                  </motion.button> */}
                 </motion.div>
               </motion.div>
             </motion.div>

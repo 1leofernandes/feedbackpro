@@ -16,6 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FeedbackPro - Avaliação de Satisfação",
   description: "Plataforma de avaliação de satisfação do cliente",
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'FeedbackPro',
+    statusBarStyle: 'black-translucent',
+  },
 };
 
 export default function RootLayout({
